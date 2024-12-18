@@ -1,10 +1,6 @@
 <script>
 export default {
   props: {
-    todos: {
-      type: Array,
-      require: true,
-    },
     completed: {
       type: Array,
       require: true,
@@ -18,6 +14,7 @@ export default {
       require: true,
     },
   },
+  inject: ['todos'],
 }
 </script>
 

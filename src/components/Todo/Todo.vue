@@ -1,22 +1,32 @@
 <script>
+import { computed } from 'vue'
 import { fetchTodos } from '@/api/index'
 import Form from './Form.vue'
 import ViewTodos from './ViewTodos.vue'
 import AppSlots from './AppSlots.vue'
+import Select from './Select.vue'
 
 export default {
   components: {
     Form,
     ViewTodos,
     AppSlots,
+    Select,
   },
   data() {
     return {
       todos: [],
       completed: [],
       title: '',
+      selectedStatus: 'all',
     }
   },
+  provide() {
+    return {
+      todos: computed(() => this.filteredTodos.activeTasks),
+    }
+  },
+
   async mounted() {
     const res = await fetchTodos()
     const storedTasks = JSON.parse(localStorage.getItem('tasks')) || []
@@ -56,6 +66,23 @@ export default {
       this.title = ''
     },
   },
+  computed: {
+    filteredTodos() {
+      console.log(this.selectedStatus)
+      let activeTasks = this.todos
+      let completedTasks = this.completed
+
+      if (this.selectedStatus === 'active') {
+        activeTasks = this.todos.filter((task) => !task.completed) // Тільки активні
+        completedTasks = [] // Для active не показуємо виконані
+      } else if (this.selectedStatus === 'completed') {
+        activeTasks = [] // Для completed не показуємо активні
+        completedTasks = this.completed.filter((task) => task.completed) // Тільки виконані
+      }
+
+      return { activeTasks, completedTasks }
+    },
+  },
 }
 </script>
 
@@ -63,11 +90,16 @@ export default {
   <header>
     <div className="header__content">
       <h1>ToDo List</h1>
+      <Select v-model="selectedStatus" />
       <Form v-model:title="title" :addNewTask="addNewTask" />
     </div>
   </header>
   <div className="container">
-    <ViewTodos :todos="todos" :doCheck="doCheck" :completed="completed" :deleteTask="deleteTask" />
+    <ViewTodos
+      :doCheck="doCheck"
+      :completed="filteredTodos.completedTasks"
+      :deleteTask="deleteTask"
+    />
   </div>
 </template>
 <style lang="scss" scoped>
